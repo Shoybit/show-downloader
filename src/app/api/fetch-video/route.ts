@@ -17,9 +17,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Extraction processing command config utilizing universal wrapper yt-dlp core architecture engine
-    // -j triggers single execution script processing returns raw structured payload metadata JSON block
-    const command = `yt-dlp -j "${videoUrl}"`;
+// src/app/api/fetch-video/route.ts
+// Windows command executor pattern mapping specifying direct local root execution
+const command = `.\\yt-dlp.exe -j "${videoUrl}"`;
 
     const { stdout, stderr } = await execPromise(command);
 

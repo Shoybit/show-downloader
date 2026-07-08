@@ -1,81 +1,67 @@
 "use client";
 
-import { useState, FormEvent } from "react";
-import axios from "axios";
-import { ArrowRight, Loader2, Link2 } from "lucide-react";
-import { VideoData } from "../types";
+import { useState } from "react";
+// Strict relative dot imports use kore alias paths override kora holo:
+import UrlInput from "./components/UrlInput";
+import ResultCard from "./components/ResultCard";
+import { VideoData } from "./types";
+import { DownloadCloud } from "lucide-react";
 
-// Interface configuration for strictly typed React props
-interface UrlInputProps {
-  setVideoData: (data: VideoData | null) => void;
-  setLoading: (loading: boolean) => void;
-  loading: boolean;
-  setError: (error: string) => void;
-}
-
-export default function UrlInput({ setVideoData, setLoading, loading, setError }: UrlInputProps) {
-  const [url, setUrl] = useState<string>("");
-
-  const handleFetch = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    if (!url.trim()) {
-      return setError("Please paste a valid media URL link.");
-    }
-
-    setLoading(true);
-    setError("");
-    setVideoData(null);
-
-    try {
-      // Integrated application endpoint hitting pipeline
-      const response = await axios.post("/api/fetch-video", { videoUrl: url });
-      
-      if (response.data) {
-        setVideoData(response.data);
-      }
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message || 
-        "Failed to resolve URL. Please verify your resource link."
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+export default function Home() {
+  const [videoData, setVideoData] = useState<VideoData | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
 
   return (
-    <form 
-      onSubmit={handleFetch} 
-      className="relative flex items-center bg-slate-900 border border-slate-800 focus-within:border-indigo-500/50 rounded-2xl p-2 shadow-2xl transition-all duration-300"
-    >
-      <div className="pl-3 text-slate-500">
-        <Link2 className="w-5 h-5" />
-      </div>
-      
-      <input
-        type="text"
-        placeholder="Paste Instagram Reels, YouTube, or Facebook link..."
-        className="w-full bg-transparent pl-3 pr-12 py-3.5 text-slate-200 outline-none text-sm md:text-base placeholder:text-slate-600 font-medium"
-        value={url}
-        onChange={(e) => setUrl(e.target.value)}
-        disabled={loading}
-      />
-      
-      <button
-        type="submit"
-        disabled={loading}
-        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all text-white px-5 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 disabled:opacity-50 active:scale-95 shadow-lg shadow-indigo-600/20"
-      >
-        {loading ? (
-          <Loader2 className="animate-spin w-4 h-4" />
-        ) : (
-          <>
-            <span>Fetch</span>
-            <ArrowRight className="w-4 h-4" />
-          </>
+    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-start pt-20 px-4 antialiased">
+      <div className="max-w-3xl w-full text-center space-y-8 z-10">
+        
+        {/* Branding Area */}
+        <div className="space-y-4">
+          <div className="inline-flex items-center justify-center p-3 bg-indigo-600/10 rounded-2xl border border-indigo-500/20 text-indigo-400 mb-2">
+            <DownloadCloud className="w-10 h-10" />
+          </div>
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
+            Show Downloader
+          </h1>
+          <p className="text-slate-400 text-base md:text-lg max-w-md mx-auto font-medium leading-relaxed">
+            Download high-quality videos and audio tracks from Instagram Reels, YouTube, or Facebook instantly.
+          </p>
+        </div>
+
+        {/* Input Option Box */}
+        <div className="w-full bg-slate-900/40 border border-slate-900 p-6 rounded-3xl shadow-xl backdrop-blur-md">
+          <UrlInput 
+            setVideoData={setVideoData} 
+            setLoading={setLoading} 
+            loading={loading} 
+            setError={setError} 
+          />
+        </div>
+
+        {/* Error Exception Banner */}
+        {error && (
+          <div className="text-red-400 bg-red-950/20 px-4 py-3 rounded-xl border border-red-500/20 text-sm font-medium">
+            {error}
+          </div>
         )}
-      </button>
-    </form>
+
+        {/* Skeleton Loading State */}
+        {loading && (
+          <div className="w-full p-6 bg-slate-900/40 border border-slate-800/60 rounded-3xl space-y-4 animate-pulse">
+            <div className="h-4 bg-slate-800 rounded w-2/3"></div>
+            <div className="h-32 bg-slate-800 rounded-2xl w-full"></div>
+          </div>
+        )}
+
+        {/* Result Action Output Card */}
+        {videoData && !loading && (
+          <div className="transform transition-all duration-300 scale-100 opacity-100">
+            <ResultCard data={videoData} />
+          </div>
+        )}
+        
+      </div>
+    </main>
   );
 }
