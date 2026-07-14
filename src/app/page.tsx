@@ -76,11 +76,8 @@ export default function Home() {
         
         {/* Premium Branding Area */}
         <div className="space-y-4">
-          <div className="inline-flex items-center justify-center p-4 bg-gradient-to-br from-indigo-600/20 to-purple-600/20 rounded-2xl border border-indigo-500/20 backdrop-blur-sm shadow-2xl mb-2 relative group">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
-            <FaDownload className="w-12 h-12 text-transparent bg-gradient-to-br from-indigo-400 to-purple-400 bg-clip-text relative z-10" />
-            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl opacity-20 blur-lg group-hover:opacity-40 transition-opacity duration-500"></div>
-          </div>
+        
+        
           
           <h1 className="text-5xl md:text-7xl font-black tracking-tight">
             <span className="bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
