@@ -1,7 +1,6 @@
 "use client";
 
-import { VideoData, git ls-filesVideoFormat } from "../types";
-
+import { VideoData, VideoFormat } from "../types";
 import { Download, Film, Music, Clock } from "lucide-react";
 
 interface ResultCardProps {
@@ -31,13 +30,7 @@ export default function ResultCard({ data, viewMode }: ResultCardProps) {
       
       {/* Left Column: Visual Media Presentation */}
       <div className="w-full md:w-2/5 flex-shrink-0">
-        <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-950 border border-slate-800">
-          <img 
-            src={data.thumbnail} 
-            alt={data.title} 
-            className="w-full h-full object-cover"
-          />
-        </div>
+
       </div>
 
       {/* Right Column: Information & Actions Terminal Grid */}
