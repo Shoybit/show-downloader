@@ -29,7 +29,7 @@ export default function ResultCard({ data, viewMode }: ResultCardProps) {
     <div className="w-full bg-slate-900 border border-slate-800/80 rounded-2xl p-5 shadow-2xl text-left flex flex-col md:flex-row gap-6 animate-fade-in">
       
       {/* Left Column: Visual Media Presentation */}
-      <div className="w-full md:w-2/5 flex-shrink-0">
+      <div className="w-full md:w-2/5 shrink-0">
 
       </div>
 
@@ -56,7 +56,7 @@ export default function ResultCard({ data, viewMode }: ResultCardProps) {
         </div>
 
         {/* Action Formats Grid Controller */}
-        <div className="space-y-2.5 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
+        <div className="space-y-2.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
           {filteredFormats.length > 0 ? (
             filteredFormats.map((item: VideoFormat, index: number) => (
               <div 

@@ -9,6 +9,7 @@ const execPromise = promisify(exec);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Enable CORS so Vercel Frontend can talk to this Render Backend
 app.use(cors());
 app.use(express.json());
 
@@ -16,9 +17,11 @@ app.use(express.json());
 app.post('/api/fetch-video', async (req, res) => {
   try {
     const { videoUrl } = req.body;
-    if (!videoUrl) return res.status(400).json({ error: "Video URL is required." });
+    if (!videoUrl) {
+      return res.status(400).json({ error: "Video URL parameters are required." });
+    }
 
-    // Linux environment-e yt-dlp binary execute hobe
+    // Direct yt-dlp call in Linux environment
     const command = `yt-dlp -j "${videoUrl}"`;
     const { stdout } = await execPromise(command);
     const rawMetadata = JSON.parse(stdout);
@@ -29,9 +32,13 @@ app.post('/api/fetch-video', async (req, res) => {
         const isAudioOnly = f.vcodec === 'none' && f.acodec !== 'none';
         return {
           url: f.url,
-          quality: isAudioOnly ? `${f.abr || 128}kbps` : f.format_note || f.resolution || "Adaptive",
+          quality: isAudioOnly ? `${f.abr || 128}kbps` : f.format_note || f.resolution || "Adaptive Stream",
           ext: isAudioOnly ? "mp3" : f.ext || "mp4",
-          note: isAudioOnly ? "Standalone Audio Track" : (f.acodec && f.acodec !== 'none') ? "Complete Media Content (Audio Included)" : "High Definition Video (Adaptive)"
+          note: isAudioOnly 
+            ? "Standalone Audio Track (MP3)" 
+            : (f.acodec && f.acodec !== 'none') 
+              ? "Complete Media Content (Audio Included)" 
+              : "High Definition Video (Requires FFmpeg Sync)"
         };
       });
 
@@ -42,15 +49,17 @@ app.post('/api/fetch-video', async (req, res) => {
       formats: formattedFormats.reverse()
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message || "Failed to process video link." });
   }
 });
 
-// 2. Download and Merge Stream Route
+// 2. Download and Merge Stream Route (YouTube, Instagram, Facebook, TikTok)
 app.get('/api/download-stream', async (req, res) => {
   try {
     const { videoUrl, quality, ext } = req.query;
-    if (!videoUrl) return res.status(400).json({ error: "Video URL is required." });
+    if (!videoUrl) {
+      return res.status(400).json({ error: "Original source video link parameters required." });
+    }
 
     const tempDir = '/tmp';
     const uniqueId = `stream_${Date.now()}`;
@@ -64,11 +73,14 @@ app.get('/api/download-stream', async (req, res) => {
 
     const files = fs.readdirSync(tempDir);
     const targetFile = files.find(f => f.startsWith(uniqueId));
-    if (!targetFile) return res.status(500).json({ error: "File process failed." });
+    if (!targetFile) {
+      return res.status(500).json({ error: "Server-side dynamic file compilation failed." });
+    }
 
     const fullFinalPath = path.join(tempDir, targetFile);
     const fileBuffer = fs.readFileSync(fullFinalPath);
     
+    // Cleanup temporary storage file
     try { fs.unlinkSync(fullFinalPath); } catch (e) {}
 
     res.setHeader("Content-Disposition", `attachment; filename="show_downloader_${Date.now()}.${ext}"`);
@@ -79,4 +91,4 @@ app.get('/api/download-stream', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Production API Engine Running on Port: ${PORT}`));
