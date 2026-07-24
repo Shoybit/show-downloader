@@ -17,7 +17,7 @@ export default function UrlInput({ setVideoData, setLoading, loading, setError }
 
   const handleFetch = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
+
     if (!url.trim()) {
       return setError("Please paste a valid media URL link.");
     }
@@ -27,11 +27,16 @@ export default function UrlInput({ setVideoData, setLoading, loading, setError }
     setVideoData(null);
 
     try {
-      const response = await axios.post("/api/fetch-video", { videoUrl: url });
+      // Dynamic Render Backend Address
+      const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "https://show-downloader.onrender.com";
+
+      const response = await axios.post(`${BACKEND_URL}/api/fetch-video`, { videoUrl: url });
+      
       if (response.data) {
         setVideoData(response.data);
       }
     } catch (err: any) {
+      console.error(err);
       setError(
         err.response?.data?.error || 
         "Failed to resolve URL. Please verify your resource link."
@@ -62,7 +67,7 @@ export default function UrlInput({ setVideoData, setLoading, loading, setError }
       <button
         type="submit"
         disabled={loading}
-        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all text-white px-5 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 disabled:opacity-50 active:scale-95 shadow-lg shadow-indigo-600/20"
+        className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 transition-all text-white px-5 py-3 rounded-xl font-semibold text-sm flex items-center gap-2 disabled:opacity-50 active:scale-95 shadow-lg shadow-indigo-600/20"
       >
         {loading ? (
           <Loader2 className="animate-spin w-4 h-4" />
