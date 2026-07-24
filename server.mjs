@@ -9,9 +9,13 @@ const execPromise = promisify(exec);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS so Vercel Frontend can talk to this Render Backend
 app.use(cors());
 app.use(express.json());
+
+// Helper function to execute yt-dlp safely via npx
+const runYtDlp = (args) => {
+  return execPromise(`npx --yes yt-dlp ${args}`);
+};
 
 // 1. Fetch Video Metadata Route
 app.post('/api/fetch-video', async (req, res) => {
@@ -21,9 +25,8 @@ app.post('/api/fetch-video', async (req, res) => {
       return res.status(400).json({ error: "Video URL parameters are required." });
     }
 
-    // Direct yt-dlp call in Linux environment
-    const command = `yt-dlp -j "${videoUrl}"`;
-    const { stdout } = await execPromise(command);
+    // Using npx to run yt-dlp directly without needing global installation
+    const { stdout } = await runYtDlp(`-j "${videoUrl}"`);
     const rawMetadata = JSON.parse(stdout);
     
     const formattedFormats = (rawMetadata.formats || [])
@@ -53,10 +56,10 @@ app.post('/api/fetch-video', async (req, res) => {
   }
 });
 
-// 2. Download and Merge Stream Route (YouTube, Instagram, Facebook, TikTok)
+// 2. Download Stream Route
 app.get('/api/download-stream', async (req, res) => {
   try {
-    const { videoUrl, quality, ext } = req.query;
+    const { videoUrl, ext } = req.query;
     if (!videoUrl) {
       return res.status(400).json({ error: "Original source video link parameters required." });
     }
@@ -68,8 +71,7 @@ app.get('/api/download-stream', async (req, res) => {
     let formatSelector = "bestvideo+bestaudio/best";
     if (ext === 'mp3') formatSelector = "bestaudio/best";
 
-    const downloadCommand = `yt-dlp -f "${formatSelector}" "${videoUrl}" -o "${outputFilePathPattern}"`;
-    await execPromise(downloadCommand);
+    await runYtDlp(`-f "${formatSelector}" "${videoUrl}" -o "${outputFilePathPattern}"`);
 
     const files = fs.readdirSync(tempDir);
     const targetFile = files.find(f => f.startsWith(uniqueId));
@@ -80,7 +82,6 @@ app.get('/api/download-stream', async (req, res) => {
     const fullFinalPath = path.join(tempDir, targetFile);
     const fileBuffer = fs.readFileSync(fullFinalPath);
     
-    // Cleanup temporary storage file
     try { fs.unlinkSync(fullFinalPath); } catch (e) {}
 
     res.setHeader("Content-Disposition", `attachment; filename="show_downloader_${Date.now()}.${ext}"`);
