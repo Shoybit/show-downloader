@@ -125,7 +125,7 @@ http://localhost:3000
 **Md Shoyaib Islam**
 
 - GitHub: https://github.com/Shoybit
-- LinkedIn: https://www.linkedin.com/in/md-shoyaib-islam1
+- LinkedIn: https://www.linkedin.com/in/shoyaib-islam1/
 
 ---
 
