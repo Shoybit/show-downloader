@@ -1,94 +1,59 @@
 import { NextRequest, NextResponse } from "next/server";
-import { exec } from "child_process";
-import { promisify } from "util";
-
-const execPromise = promisify(exec);
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { videoUrl } = body;
+    const videoUrl = body.url || body.videoUrl;
 
     if (!videoUrl) {
       return NextResponse.json(
-        { error: "Media resource target URL query parameter is required." },
+        { error: "Media resource target URL is required." },
         { status: 400 }
       );
     }
 
-    // Windows local sub-process execution structure passing dynamic bypass format flags
-    const command = `.\\yt-dlp.exe -j --ffmpeg-location .\\ "${videoUrl}"`;
-
-    const { stdout, stderr } = await execPromise(command);
-
-    if (stderr && !stdout) {
-      return NextResponse.json(
-        { error: "Extraction processing module initialization failed on provider site." },
-        { status: 422 }
-      );
-    }
-
-    const rawMetadata = JSON.parse(stdout);
-    const rawFormats = rawMetadata.formats || [];
-
-    const formattedFormats: any[] = [];
-
-    // 1. Extract and map true physical audio configurations
-    rawFormats.forEach((f: any) => {
-      if (f.url && f.vcodec === "none" && f.acodec !== "none") {
-        formattedFormats.push({
-          url: f.url,
-          quality: `${f.abr || 128}kbps`,
-          ext: "mp3",
-          note: "Standalone Audio Track (MP3 Master)"
-        });
-      }
+    // Cobalt API-তে রিকোয়েস্ট পাঠানো (এটি ইউটিউব ব্লক বাইপাস করবে)
+    const cobaltResponse = await fetch("https://api.cobalt.tools/", {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        url: videoUrl,
+        videoQuality: "720",
+      }),
     });
 
-    // 2. Select progressive pre-merged formats (with video and audio) OR high quality adaptive combinations
-    rawFormats.forEach((f: any) => {
-      if (f.url && f.vcodec !== "none") {
-        const hasAudioTrack = f.acodec && f.acodec !== "none";
-        const isDash = f.container === "mp4_dash" || (f.format_note && f.format_note.toLowerCase().includes("dash"));
+    const data = await cobaltResponse.json();
 
-        formattedFormats.push({
-          url: f.url,
-          quality: f.height ? `${f.height}p` : f.format_note || f.resolution || "Direct Link",
-          ext: f.ext || "mp4",
-          note: hasAudioTrack && !isDash
-            ? "Complete Media Content (Audio Stream Included)"
-            : "High Definition Video (Requires FFMPEG Sync)"
-        });
-      }
-    });
-
-    // 3. Fallback priority override logic for strict Instagram/TikTok direct sources
-    if (rawMetadata.url) {
-      formattedFormats.push({
-        url: rawMetadata.url,
-        quality: "720p / Source Quality",
-        ext: "mp4",
-        note: "Complete Media Content (Audio Stream Included)"
-      });
+    if (!cobaltResponse.ok || data.status === "error") {
+      throw new Error(data.text || "Failed to process video");
     }
 
-    // De-duplicate array items based on matching quality profiles to clear grid bloat
-    const uniqueFormats = Array.from(
-      new Map(formattedFormats.map((item) => [item.quality + item.ext + item.note, item])).values()
-    );
-
+    // আপনার অ্যাপের রেসপন্স ফরম্যাট
     const formattedPayload = {
-      title: rawMetadata.title || `Video by ${rawMetadata.uploader || "Universal Creator"}`,
-      thumbnail: rawMetadata.thumbnail || "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=1074&auto=format&fit=crop",
-      duration: rawMetadata.duration_string || "N/A",
-      formats: uniqueFormats.reverse() // Keep prime source downloads on top of stack
+      title: "Downloaded Media Track",
+      thumbnail: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?q=80&w=1074&auto=format&fit=crop",
+      duration: "N/A",
+      formats: [
+        {
+          url: data.url,
+          quality: "720p / Source Quality",
+          ext: "mp4",
+          note: "Complete Media Content (Audio Stream Included)",
+        },
+      ],
     };
 
     return NextResponse.json(formattedPayload, { status: 200 });
 
   } catch (error: any) {
     return NextResponse.json(
-      { error: "Engine execution exception failure configuration or unsupported link protocol.", details: error.message },
+      {
+        error: "Failed to fetch video",
+        details: error.message,
+      },
       { status: 500 }
     );
   }

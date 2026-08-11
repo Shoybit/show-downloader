@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     const contentType = targetMediaResponse.headers.get("Content-Type") || "video/mp4";
     const contentLength = targetMediaResponse.headers.get("Content-Length");
 
-    
+
     let filename = "show_downloader_media.mp4";
     if (contentType.includes("audio") || contentType.includes("mpeg")) {
       filename = "show_downloader_media.mp3";
