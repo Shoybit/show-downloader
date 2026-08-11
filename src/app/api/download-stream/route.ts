@@ -7,37 +7,56 @@ export async function GET(req: NextRequest) {
 
     if (!streamTargetUrl) {
       return NextResponse.json(
-        { error: "Target resource downstream payload distribution query pointer link is structurally required context parameter." },
+        { error: "Target resource URL is required." },
         { status: 400 }
       );
     }
 
-    // Direct platform verification resource media payload context stream pipe setup fetching structure
-    const targetMediaResponse = await fetch(streamTargetUrl);
+    
+    const targetMediaResponse = await fetch(streamTargetUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
+    });
 
     if (!targetMediaResponse.ok) {
       return NextResponse.json(
-        { error: "Downstream platform resource delivery pipelines rejected proxy content connection handshake mapping verification profiles." },
+        { error: "Failed to fetch media stream from target platform." },
         { status: 502 }
       );
     }
 
-    // Extracts streaming system blobs array content representation format structure
-    const contentStreamBlob = targetMediaResponse.body;
+    const contentType = targetMediaResponse.headers.get("Content-Type") || "video/mp4";
+    const contentLength = targetMediaResponse.headers.get("Content-Length");
 
-    // Strict browser execution headers force-triggers automated local filesystem dynamic target automated save-as download dialog box bypass controls
+    
+    let filename = "show_downloader_media.mp4";
+    if (contentType.includes("audio") || contentType.includes("mpeg")) {
+      filename = "show_downloader_media.mp3";
+    }
+
     const streamBypassHeaders = new Headers();
-    streamBypassHeaders.set("Content-Disposition", 'attachment; filename="show_downloader_media.mp4"');
-    streamBypassHeaders.set("Content-Type", targetMediaResponse.headers.get("Content-Type") || "video/mp4");
+    streamBypassHeaders.set(
+      "Content-Disposition",
+      `attachment; filename="${filename}"`
+    );
+    streamBypassHeaders.set("Content-Type", contentType);
 
-    return new NextResponse(contentStreamBlob, {
+    if (contentLength) {
+      streamBypassHeaders.set("Content-Length", contentLength);
+    }
+
+    return new NextResponse(targetMediaResponse.body, {
       status: 200,
       headers: streamBypassHeaders,
     });
-
   } catch (error: any) {
     return NextResponse.json(
-      { error: "Downstream proxy injection context execution exception system error failure parameters.", details: error.message },
+      {
+        error: "Failed to process media stream download pipeline.",
+        details: error.message,
+      },
       { status: 500 }
     );
   }
